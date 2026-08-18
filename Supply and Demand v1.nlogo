@@ -328,7 +328,7 @@ PLOT
 262
 329
 666
-479
+603
 Extreme (Min/Max) Prices
 NIL
 NIL
