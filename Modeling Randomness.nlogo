@@ -10,6 +10,7 @@ globals [
 
   sample-means
 
+  generating-sample?
 ]
 
 
@@ -18,6 +19,10 @@ to setup
 
   clear-all
 
+  clear-output
+  output-type "Sample:"
+
+  set generating-sample? false
 
   set sample []
   set sample-means []
@@ -57,6 +62,11 @@ end
 
 to go
 
+  if not generating-sample? and point-counter = 0 [
+    clear-output
+    output-type "Sample:"
+  ]
+
   let r random-float 1
 
   let i 1
@@ -67,8 +77,19 @@ to go
   ]
 
   set point i - 1
+  if not generating-sample? [
+    if point-counter > 0 [ output-type ", " ]
+    if point-counter mod 12 = 0 [ output-type "\n" ]
+    output-type point
+  ]
+
+
   set point-counter (point-counter + 1)
+  if not generating-sample? and point-counter = sample-size [ finish-sample ]
+
   set sample (lput point sample)
+
+  if not generating-sample? [ graph-sample ]
 
 
   tick
@@ -78,19 +99,45 @@ end
 
 to get-sample
 
-  set-current-plot "Points"
-  set-current-plot-pen "default"
-  plot-pen-reset
+  set generating-sample? true
 
-  set point-counter 0
+  let output-string ""
+  if point-counter = 0 [ set output-string "Sample:" ]
 
-  let i length sample
+  let i point-counter
   while [ i < sample-size ] [
     go
+
+    if i > 0 [ set output-string (word output-string ", ") ]
+    if i mod 12 = 0 [ set output-string (word output-string "\n") ]
+    set output-string (word output-string (last sample))
+
     set i (i + 1)
   ]
 
+  if member? "Sample:" output-string [ clear-output ]
+  output-type output-string
+
+  finish-sample
+
+  set generating-sample? false
+
+end
+
+to finish-sample
+
+  set point-counter 0
+
   set sample-means (lput (mean sample) sample-means)
+
+  graph-sample
+  graph-sample-means
+
+  set sample []
+
+end
+
+to graph-sample
 
   set-current-plot "Sample Distribution"
   set-current-plot-pen "Sample"
@@ -101,7 +148,7 @@ to get-sample
   let bins [ 0 0 0 0 0 0 ]
   foreach sample [ x -> set bins (replace-item (floor x) bins ((item (floor x) bins) + 1)) ]
 
-  set i 0
+  let i 0
   while [ i < length bins ] [
     plotxy i (item i bins)
     set i (i + 1)
@@ -114,11 +161,6 @@ to get-sample
   let m (mean sample)
   plotxy m 0
   plotxy m round (sample-size * 2 * max probability-distribution)
-
-  graph-sample-means
-
-
-  set sample []
 
 end
 
@@ -236,24 +278,6 @@ NIL
 NIL
 1
 
-PLOT
-330
-20
-530
-463
-Points
-NIL
-NIL
-0.0
-10.0
-0.0
-6.0
-true
-false
-"" ""
-PENS
-"default" 1.0 2 -16777216 true "" "plotxy point-counter point"
-
 SLIDER
 143
 90
@@ -263,16 +287,16 @@ sample-size
 sample-size
 1
 100
-38.0
+20.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-529
+625
 20
-890
+986
 463
 Sample Distribution
 NIL
@@ -290,9 +314,9 @@ PENS
 "Mean" 1.0 0 -2674135 true "" ""
 
 PLOT
-889
+985
 20
-1404
+1500
 463
 Distribution of Sample Means
 NIL
@@ -305,7 +329,7 @@ false
 true
 "" ""
 PENS
-"Sample Means" 1.0 0 -13840069 true "" ""
+"Sample Means" 0.2 0 -13840069 true "" ""
 "Mean of Sample Means" 1.0 0 -2674135 true "" ""
 
 BUTTON
@@ -326,10 +350,10 @@ NIL
 1
 
 PLOT
-21
-173
-324
 323
+20
+626
+316
 Probability Distribution
 NIL
 NIL
@@ -345,104 +369,111 @@ PENS
 "Mean" 1.0 0 -2674135 true "" "plot-pen-reset\n\nplotxy probability-mean 0\nplotxy probability-mean 0.01 * (round (130 * max probability-distribution))"
 
 SLIDER
-43
-325
-76
-417
+351
+319
+384
+411
 p1
 p1
 0
 1
-0.13
+0.17
 0.01
 1
 NIL
 VERTICAL
 
 SLIDER
-76
-325
-109
+384
+319
 417
+411
 p2
 p2
 0
 1
-0.25
+0.17
 0.01
 1
 NIL
 VERTICAL
 
 SLIDER
-109
-325
-142
 417
+319
+450
+411
 p3
 p3
 0
 1
-0.13
+0.17
 0.01
 1
 NIL
 VERTICAL
 
 SLIDER
-143
-325
-176
-417
+451
+319
+484
+411
 p4
 p4
 0
 1
-0.13
+0.17
 0.01
 1
 NIL
 VERTICAL
 
 SLIDER
-176
-325
-209
-417
+484
+319
+517
+411
 p5
 p5
 0
 1
-0.25
+0.17
 0.01
 1
 NIL
 VERTICAL
 
 SLIDER
-209
-325
-242
-417
+517
+319
+550
+411
 p6
 p6
 0
 1
-0.13
+0.17
 0.01
 1
 NIL
 VERTICAL
 
 CHOOSER
-43
-420
-181
-465
+351
+414
+489
+459
 distribution
 distribution
 "Uniform" "Skewed" "Bimodal" "Custom"
-2
+0
+
+OUTPUT
+21
+163
+317
+459
+13
 
 @#$#@#$#@
 ## WHAT IS IT?
